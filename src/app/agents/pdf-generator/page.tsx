@@ -144,6 +144,21 @@ export default function PdfGeneratorPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
+                        <div className="flex flex-col items-center justify-center space-y-3 p-6 border-b">
+                            <Label htmlFor="count" className="text-xl font-semibold">Quantity per Document</Label>
+                            <div className="w-[120px]">
+                                <Input
+                                    id="count"
+                                    type="number"
+                                    min="1"
+                                    max="50"
+                                    value={count}
+                                    onChange={(e) => setCount(e.target.value)}
+                                    className="text-center text-3xl h-16 font-bold"
+                                />
+                            </div>
+                        </div>
+
                         <div className="flex justify-end">
                             <Button variant="ghost" size="sm" onClick={handleSelectAll}>
                                 {selectedTypes.length === ADVISORY_TYPES.length ? "Deselect All" : "Select All"}
@@ -155,15 +170,15 @@ export default function PdfGeneratorPage() {
                                 <div
                                     key={type}
                                     className={`flex items-center space-x-3 rounded-lg border p-3 cursor-pointer transition-colors ${selectedTypes.includes(type)
-                                        ? "bg-primary/5 border-primary"
-                                        : "hover:bg-muted/50"
+                                            ? "bg-primary/5 border-primary"
+                                            : "hover:bg-muted/50"
                                         }`}
                                     onClick={() => handleTypeToggle(type)}
                                 >
                                     <div
                                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${selectedTypes.includes(type)
-                                            ? "bg-primary text-primary-foreground border-primary"
-                                            : "border-input"
+                                                ? "bg-primary text-primary-foreground border-primary"
+                                                : "border-input"
                                             }`}
                                     >
                                         {selectedTypes.includes(type) && <CheckCircle2 className="h-3.5 w-3.5" />}
@@ -171,26 +186,6 @@ export default function PdfGeneratorPage() {
                                     <Label className="cursor-pointer font-normal flex-1">{type}</Label>
                                 </div>
                             ))}
-                        </div>
-
-                        <div className="flex items-center gap-4 p-4 border rounded-xl bg-muted/30">
-                            <div className="flex-1">
-                                <Label htmlFor="count" className="text-base font-medium">Quantity per Document</Label>
-                                <p className="text-sm text-muted-foreground">
-                                    How many copies of each selected document type to generate
-                                </p>
-                            </div>
-                            <div className="w-[100px]">
-                                <Input
-                                    id="count"
-                                    type="number"
-                                    min="1"
-                                    max="50"
-                                    value={count}
-                                    onChange={(e) => setCount(e.target.value)}
-                                    className="text-center text-lg h-12"
-                                />
-                            </div>
                         </div>
 
                         {generating && (
