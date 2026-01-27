@@ -38,6 +38,7 @@ const ADVISORY_TYPES = [
 export default function PdfGeneratorPage() {
     const [generating, setGenerating] = useState(false);
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [count, setCount] = useState("1");
     const [progress, setProgress] = useState(0);
     const [result, setResult] = useState<{
         success: boolean;
@@ -76,6 +77,7 @@ export default function PdfGeneratorPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     types: selectedTypes,
+                    count: parseInt(count) || 1,
                 }),
             });
 
@@ -118,6 +120,8 @@ export default function PdfGeneratorPage() {
         }
     };
 
+    const totalDocs = selectedTypes.length * (parseInt(count) || 1);
+
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -146,7 +150,7 @@ export default function PdfGeneratorPage() {
                             </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 max-h-[600px] overflow-y-auto pr-2">
                             {ADVISORY_TYPES.map((type) => (
                                 <div
                                     key={type}
@@ -167,6 +171,26 @@ export default function PdfGeneratorPage() {
                                     <Label className="cursor-pointer font-normal flex-1">{type}</Label>
                                 </div>
                             ))}
+                        </div>
+
+                        <div className="flex items-center gap-4 p-4 border rounded-xl bg-muted/30">
+                            <div className="flex-1">
+                                <Label htmlFor="count" className="text-base font-medium">Quantity per Document</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    How many copies of each selected document type to generate
+                                </p>
+                            </div>
+                            <div className="w-[100px]">
+                                <Input
+                                    id="count"
+                                    type="number"
+                                    min="1"
+                                    max="50"
+                                    value={count}
+                                    onChange={(e) => setCount(e.target.value)}
+                                    className="text-center text-lg h-12"
+                                />
+                            </div>
                         </div>
 
                         {generating && (
@@ -206,10 +230,13 @@ export default function PdfGeneratorPage() {
 
                         <Button
                             onClick={handleGenerate}
-                            disabled={generating || selectedTypes.length === 0}
-                            className="w-full"
+                            disabled={generating || selectedTypes.length === 0 || !count || parseInt(count) < 1}
+                            className="w-full h-12 text-lg"
                         >
-                            {generating ? "Generating..." : `Generate ${selectedTypes.length} Document${selectedTypes.length !== 1 ? 's' : ''}`}
+                            {generating
+                                ? "Generating..."
+                                : `Generate ${totalDocs} Document${totalDocs !== 1 ? 's' : ''}`
+                            }
                         </Button>
                     </CardContent>
                 </Card>
