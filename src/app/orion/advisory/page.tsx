@@ -174,9 +174,6 @@ export default function AdvisoryPage() {
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Advisory Review</h1>
-                        <p className="text-muted-foreground">
-                            Review and validate advisory agreement documents
-                        </p>
                     </div>
                 </div>
 
