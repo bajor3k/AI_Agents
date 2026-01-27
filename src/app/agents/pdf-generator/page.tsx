@@ -16,10 +16,28 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { FileUp, FileText, CheckCircle2, AlertCircle } from "lucide-react";
 
+const ADVISORY_TYPES = [
+    "Discretionary NON-WRAP Flat (1)",
+    "Discretionary NON-WRAP Flat (2)",
+    "Discretionary NON-WRAP Tiered (1)",
+    "Discretionary NON-WRAP Tiered (2)",
+    "Discretionary WRAP Flat (1)",
+    "Discretionary WRAP Flat (2)",
+    "Discretionary WRAP Tiered (1)",
+    "Discretionary WRAP Tiered (2)",
+    "Non-Discretionary NON-WRAP Flat (1)",
+    "Non-Discretionary NON-WRAP Flat (2)",
+    "Non-Discretionary NON-WRAP Tiered (1)",
+    "Non-Discretionary NON-WRAP Tiered (2)",
+    "Non-Discretionary WRAP Flat (1)",
+    "Non-Discretionary WRAP Flat (2)",
+    "Non-Discretionary WRAP Tiered (1)",
+    "Non-Discretionary WRAP Tiered (2)",
+];
+
 export default function PdfGeneratorPage() {
     const [generating, setGenerating] = useState(false);
-    const [count, setCount] = useState("10");
-    const [template, setTemplate] = useState("all");
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [progress, setProgress] = useState(0);
     const [result, setResult] = useState<{
         success: boolean;
@@ -28,7 +46,21 @@ export default function PdfGeneratorPage() {
     } | null>(null);
     const { toast } = useToast();
 
+    const handleTypeToggle = (type: string) => {
+        setSelectedTypes((prev) =>
+            prev.includes(type)
+                ? prev.filter((t) => t !== type)
+                : [...prev, type]
+        );
+    };
+
+    const handleSelectAll = () => {
+        setSelectedTypes(selectedTypes.length === ADVISORY_TYPES.length ? [] : [...ADVISORY_TYPES]);
+    };
+
     const handleGenerate = async () => {
+        if (selectedTypes.length === 0) return;
+
         setGenerating(true);
         setProgress(0);
         setResult(null);
@@ -43,8 +75,7 @@ export default function PdfGeneratorPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    count: parseInt(count),
-                    template: template === "all" ? undefined : template,
+                    types: selectedTypes,
                 }),
             });
 
@@ -96,67 +127,46 @@ export default function PdfGeneratorPage() {
                 </div>
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">PDF Generator</h1>
-                    <p className="text-muted-foreground">
-                        Generate test advisory documents from templates
-                    </p>
                 </div>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6">
                 {/* Generator Form */}
                 <Card className="rounded-3xl">
                     <CardHeader>
-                        <CardTitle>Generate Documents</CardTitle>
+                        <CardTitle>Select Document Types</CardTitle>
                         <CardDescription>
-                            Create test PDF documents with randomized data
+                            Choose which advisory agreements to generate
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="count">Number of Documents</Label>
-                            <Input
-                                id="count"
-                                type="number"
-                                min="1"
-                                max="100"
-                                value={count}
-                                onChange={(e) => setCount(e.target.value)}
-                                placeholder="10"
-                            />
-                            <p className="text-sm text-muted-foreground">
-                                Generate between 1 and 100 documents
-                            </p>
+                        <div className="flex justify-end">
+                            <Button variant="ghost" size="sm" onClick={handleSelectAll}>
+                                {selectedTypes.length === ADVISORY_TYPES.length ? "Deselect All" : "Select All"}
+                            </Button>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="template">Template Selection</Label>
-                            <Select value={template} onValueChange={setTemplate}>
-                                <SelectTrigger id="template">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Templates (Random)</SelectItem>
-                                    <SelectItem value="template-1">Template 1</SelectItem>
-                                    <SelectItem value="template-2">Template 2</SelectItem>
-                                    <SelectItem value="template-3">Template 3</SelectItem>
-                                    <SelectItem value="template-4">Template 4</SelectItem>
-                                    <SelectItem value="template-5">Template 5</SelectItem>
-                                    <SelectItem value="template-6">Template 6</SelectItem>
-                                    <SelectItem value="template-7">Template 7</SelectItem>
-                                    <SelectItem value="template-8">Template 8</SelectItem>
-                                    <SelectItem value="template-9">Template 9</SelectItem>
-                                    <SelectItem value="template-10">Template 10</SelectItem>
-                                    <SelectItem value="template-11">Template 11</SelectItem>
-                                    <SelectItem value="template-12">Template 12</SelectItem>
-                                    <SelectItem value="template-13">Template 13</SelectItem>
-                                    <SelectItem value="template-14">Template 14</SelectItem>
-                                    <SelectItem value="template-15">Template 15</SelectItem>
-                                    <SelectItem value="template-16">Template 16</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <p className="text-sm text-muted-foreground">
-                                Select a specific template or use all templates randomly
-                            </p>
+                        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-3">
+                            {ADVISORY_TYPES.map((type) => (
+                                <div
+                                    key={type}
+                                    className={`flex items-center space-x-3 rounded-lg border p-3 cursor-pointer transition-colors ${selectedTypes.includes(type)
+                                        ? "bg-primary/5 border-primary"
+                                        : "hover:bg-muted/50"
+                                        }`}
+                                    onClick={() => handleTypeToggle(type)}
+                                >
+                                    <div
+                                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${selectedTypes.includes(type)
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "border-input"
+                                            }`}
+                                    >
+                                        {selectedTypes.includes(type) && <CheckCircle2 className="h-3.5 w-3.5" />}
+                                    </div>
+                                    <Label className="cursor-pointer font-normal flex-1">{type}</Label>
+                                </div>
+                            ))}
                         </div>
 
                         {generating && (
@@ -196,81 +206,11 @@ export default function PdfGeneratorPage() {
 
                         <Button
                             onClick={handleGenerate}
-                            disabled={generating || !count || parseInt(count) < 1}
+                            disabled={generating || selectedTypes.length === 0}
                             className="w-full"
                         >
-                            {generating ? "Generating..." : "Generate PDFs"}
+                            {generating ? "Generating..." : `Generate ${selectedTypes.length} Document${selectedTypes.length !== 1 ? 's' : ''}`}
                         </Button>
-                    </CardContent>
-                </Card>
-
-                {/* Instructions */}
-                <Card className="rounded-3xl">
-                    <CardHeader>
-                        <CardTitle>How It Works</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-3">
-                            <div className="flex gap-3">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
-                                    1
-                                </div>
-                                <div>
-                                    <h4 className="font-medium">Select Options</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                        Choose the number of documents and template to use
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
-                                    2
-                                </div>
-                                <div>
-                                    <h4 className="font-medium">Generate</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                        Click Generate to create PDFs with random test data
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
-                                    3
-                                </div>
-                                <div>
-                                    <h4 className="font-medium">Review</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                        Files are saved in the documents/pending directory
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
-                                    4
-                                </div>
-                                <div>
-                                    <h4 className="font-medium">Analyze</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                        Head to Advisory Review to analyze the generated documents with AI.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-lg border bg-muted/50 p-4">
-                            <h4 className="font-medium mb-2">Note</h4>
-                            <p className="text-sm text-muted-foreground">
-                                Generated PDFs contain randomized data for testing purposes. Ensure you have
-                                the reference templates in the{" "}
-                                <code className="text-xs bg-background px-1 py-0.5 rounded">
-                                    src/ai/reference-docs
-                                </code>{" "}
-                                folder.
-                            </p>
-                        </div>
                     </CardContent>
                 </Card>
             </div>

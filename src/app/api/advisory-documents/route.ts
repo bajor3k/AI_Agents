@@ -4,16 +4,17 @@ import { join } from "path";
 import { existsSync, mkdirSync } from "fs";
 import type { DocumentFile } from "@/types";
 
-const DOCUMENTS_FOLDER = process.env.DOCUMENTS_FOLDER || "./documents";
-const PENDING_FOLDER = join(DOCUMENTS_FOLDER, "pending");
+const DOCUMENTS_FOLDER = "/Users/bajor3k/Desktop/Orion Advisory";
+const PENDING_FOLDER = DOCUMENTS_FOLDER; // Using the root folder as the pending source
 const PROCESSED_FOLDER = join(DOCUMENTS_FOLDER, "processed");
 
 // Ensure folders exist
-[PENDING_FOLDER, PROCESSED_FOLDER].forEach((folder) => {
-    if (!existsSync(folder)) {
-        mkdirSync(folder, { recursive: true });
-    }
-});
+if (!existsSync(DOCUMENTS_FOLDER)) {
+    mkdirSync(DOCUMENTS_FOLDER, { recursive: true });
+}
+if (!existsSync(PROCESSED_FOLDER)) {
+    mkdirSync(PROCESSED_FOLDER, { recursive: true });
+}
 
 // GET - List all documents
 export async function GET(request: NextRequest) {
