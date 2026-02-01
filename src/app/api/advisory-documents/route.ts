@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, readdir, unlink, readFile } from "fs/promises";
+import { writeFile, readdir } from "fs/promises";
 import { join } from "path";
 import { existsSync, mkdirSync } from "fs";
 import type { DocumentFile } from "@/types";
+import { processAdvisoryDocument, pushDocument } from "@/services/advisory-processor";
 
 const DOCUMENTS_FOLDER = "/Users/bajor3k/Desktop/Orion Advisory";
-const PENDING_FOLDER = DOCUMENTS_FOLDER; // Using the root folder as the pending source
+const PENDING_FOLDER = DOCUMENTS_FOLDER;
 const PROCESSED_FOLDER = join(DOCUMENTS_FOLDER, "processed");
 
-// Ensure folders exist
 if (!existsSync(DOCUMENTS_FOLDER)) {
     mkdirSync(DOCUMENTS_FOLDER, { recursive: true });
 }
@@ -17,7 +17,7 @@ if (!existsSync(PROCESSED_FOLDER)) {
 }
 
 // GET - List all documents
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         const pendingFiles = existsSync(PENDING_FOLDER) ? await readdir(PENDING_FOLDER) : [];
         const processedFiles = existsSync(PROCESSED_FOLDER) ? await readdir(PROCESSED_FOLDER) : [];
@@ -95,11 +95,12 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// PUT - Analyze a document
+// PUT - Analyze or Push a document
 export async function PUT(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
+        const action = searchParams.get("action") || "analyze";
 
         if (!id) {
             return NextResponse.json(
@@ -108,18 +109,57 @@ export async function PUT(request: NextRequest) {
             );
         }
 
-        // Simulate analysis
+        if (action === "push") {
+            // Push action: IGO → update Orion + reply Jira, NIGO → reply Jira with missing fields
+            // TODO: Look up the real document from storage with its analyzed data
+            const stubDoc: DocumentFile = {
+                id,
+                fileName: "stub.pdf",
+                filePath: "",
+                status: "nigo",
+                createdAt: new Date().toISOString(),
+                // TODO: Load real analyzed data from storage/database
+                data: undefined,
+            };
+
+            const result = await pushDocument(stubDoc);
+
+            return NextResponse.json({
+                success: result.success,
+                message: result.action === "pushed"
+                    ? "Account updated in Orion and Jira ticket notified"
+                    : result.action === "nigo-replied"
+                        ? "Jira ticket notified with missing fields"
+                        : "Push failed",
+                result,
+            });
+        }
+
+        // Default: analyze action
+        // TODO: Look up the real document file for analysis
+        const stubDoc: DocumentFile = {
+            id,
+            fileName: "stub.pdf",
+            filePath: "",
+            status: "pending",
+            createdAt: new Date().toISOString(),
+        };
+
+        const analysis = await processAdvisoryDocument(stubDoc);
+
         return NextResponse.json({
             success: true,
             message: "Document analyzed",
             data: {
-                status: Math.random() > 0.5 ? "igo" : "nigo",
+                status: analysis.status,
+                extractedData: analysis.data,
+                errors: analysis.errors,
             },
         });
     } catch (error) {
-        console.error("Error analyzing document:", error);
+        console.error("Error processing document:", error);
         return NextResponse.json(
-            { success: false, error: "Failed to analyze document" },
+            { success: false, error: "Failed to process document" },
             { status: 500 }
         );
     }
@@ -138,7 +178,7 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-        // In a real implementation, you would delete the actual file
+        // TODO: Actually delete the file from disk
         return NextResponse.json({
             success: true,
             message: "Document deleted",

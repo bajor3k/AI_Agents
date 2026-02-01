@@ -77,9 +77,12 @@ export interface DocumentFile {
   status: "pending" | "igo" | "nigo";
   createdAt: string;
   analyzedAt?: string;
+  pushedAt?: string;
   data?: AdvisoryData;
   validationErrors?: string[];
   isSelected?: boolean;
+  jiraTicketId?: string;
+  jiraTicketKey?: string;
 }
 
 // API response types
@@ -104,6 +107,47 @@ export interface GeneratePdfsResponse {
     count: number;
     templates: string[];
   };
+}
+
+// Jira types
+export interface JiraTicket {
+  id: string;
+  key: string;
+  summary: string;
+  status: string;
+  reporter: string;
+  attachments: JiraAttachment[];
+  created: string;
+}
+
+export interface JiraAttachment {
+  id: string;
+  filename: string;
+  url: string;
+  mimeType: string;
+  size: number;
+}
+
+// Orion types
+export interface OrionAccountUpdate {
+  accountNumber: string;
+  discretionary: boolean;
+  wrap: boolean;
+  clientName: string;
+  effectiveDate: string;
+  feeType: string;
+  feeAmount: string;
+  advisorName: string;
+  repCode: string;
+}
+
+// Push result
+export interface PushResult {
+  success: boolean;
+  action: "pushed" | "nigo-replied" | "error";
+  jiraCommentId?: string;
+  orionUpdated?: boolean;
+  errors?: string[];
 }
 
 // Filter types
